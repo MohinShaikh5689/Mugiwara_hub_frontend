@@ -7,10 +7,10 @@ import axios from 'axios';
 const SearchResults = () => {
     const { searchQuery } = useSearch();
     const [result, setResult] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
+
 
     const fetchSearchResults = async () => {
-        setIsLoading(true);
+      
         setResult([]); // Reset results before new search
         
         try {
@@ -27,9 +27,7 @@ const SearchResults = () => {
             setResult(mappedResults);
         } catch (error) {
             console.error(error);
-        } finally {
-            setIsLoading(false);
-        }
+        } 
     };
 
     useEffect(() => {
