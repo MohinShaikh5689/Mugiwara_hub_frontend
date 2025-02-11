@@ -25,7 +25,7 @@ const Profile = () => {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+
     const token = localStorage.getItem('token');
 
     const fetchProfile = async () => {
@@ -39,7 +39,7 @@ const Profile = () => {
             console.log(response.data);
         } catch (error) {
             console.error('Error fetching profile:', error);
-            setError('Failed to load profile');
+            
         }
     };
 
@@ -54,7 +54,7 @@ const Profile = () => {
             setWatchlist(response.data);
         } catch (error) {
             console.error('Error fetching watchlist:', error);
-            setError('Failed to load watchlist');
+           
         } finally {
             setIsLoading(false);
         }
