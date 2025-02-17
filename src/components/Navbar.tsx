@@ -26,9 +26,13 @@ const menuItems = [
             { path: '/genres/horror', label: 'Horror' },
             { path: '/genres/romance', label: 'Romance' },
             { path: '/genres/sci-fi', label: 'Sci-Fi' },
+            { path: '/genres/sports', label: 'Sports' },
             { path: '/genres/hentai', label: 'Hentai' },
             { path: '/genres/isekai', label: 'Isekai' },
             { path: '/genres/mystery', label: 'Mystery' },
+            { path: '/genres/supernatural', label: 'Supernatural' },
+            { path: '/genres/thriller', label: 'Thriller' },
+            { path: '/genres/slice-of-life', label: 'Slice of Life' },
         ]
     },
     { path: '/community', label: 'Community' }

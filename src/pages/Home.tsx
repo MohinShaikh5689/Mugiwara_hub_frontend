@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { FaLessThan } from "react-icons/fa";
 import { FaGreaterThan } from "react-icons/fa";
+import { useParams } from 'react-router-dom';
 
 interface Anime {
     id: number;
@@ -17,9 +18,31 @@ interface Anime {
 interface HomeProps {
     filter?: 'trending' | 'popular' | 'upcoming' | 'airing';
     genre?: string;
+    genreId?: number;
+    
 }
 
-const Home = ({ filter, genre }: HomeProps) => {    
+// Add a genre mapping object at the top of your file
+const genreIdMap: { [key: string]: string } = {
+    'action': '1',
+    'adventure': '2',
+    'comedy': '4',
+    'drama': '8',
+    'fantasy': '10',
+    'horror': '14',
+    'romance': '22',
+    'sci-fi': '24',
+    'sports': '30',
+    'hentai': '12',
+    'isekai': '62',
+    'mystery': '7',
+    'supernatural': '37',
+    'thriller': '41',
+    'slice-of-life': '36',
+};
+
+const Home = ({ filter }: HomeProps) => {    
+    const { genre } = useParams<{ genre: string }>();
     const [anime, setAnime] = useState<Anime[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -69,11 +92,17 @@ const Home = ({ filter, genre }: HomeProps) => {
                         break;
                 }
             } else if (genre) {
-                url += `/anime?genres=${genre}&page=${page}`;
+                // Convert genre name to ID and use it in the API call
+                const genreId = genreIdMap[genre.toLowerCase()];
+                if (genreId) {
+                    url += `/anime?genres=${genreId}&page=${page}`;
+                } else {
+                    setError('Invalid genre');
+                    return;
+                }
             } else {
                 url += '/top/anime';
-            }
-
+            } 
             const response = await axios.get(url);
             const mappedAnime = response.data.data.map((item: any) => ({
                 id: item.mal_id,
@@ -102,6 +131,7 @@ const Home = ({ filter, genre }: HomeProps) => {
     };
 
     useEffect(() => {
+        
         const pageTitle = filter 
             ? `Mugiwara Hub | ${filter.charAt(0).toUpperCase() + filter.slice(1)} Anime`
             : genre 

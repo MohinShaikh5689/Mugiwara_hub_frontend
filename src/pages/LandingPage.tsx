@@ -115,7 +115,7 @@ const LandingPage = () => {
                                 >
                                     <img
                                         className="w-full"
-                                        src="public/assets/anw-min.webp"
+                                        src="/assets/anw-min.webp"
                                         alt="Anime Collection"
                                     />
                                     <motion.div
