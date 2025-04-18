@@ -1,9 +1,8 @@
 import AnimeCard from "../components/AnimeCard";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { FaLessThan } from "react-icons/fa";
-import { FaGreaterThan } from "react-icons/fa";
-import { useParams } from 'react-router-dom';
+import { FaLessThan, FaGreaterThan } from "react-icons/fa";
+import { useParams, useSearchParams } from 'react-router-dom';
 
 interface Anime {
     id: number;
@@ -17,32 +16,13 @@ interface Anime {
 
 interface HomeProps {
     filter?: 'trending' | 'popular' | 'upcoming' | 'airing';
-    genre?: string;
-    genreId?: number;
-    
 }
 
-// Add a genre mapping object at the top of your file
-const genreIdMap: { [key: string]: string } = {
-    'action': '1',
-    'adventure': '2',
-    'comedy': '4',
-    'drama': '8',
-    'fantasy': '10',
-    'horror': '14',
-    'romance': '22',
-    'sci-fi': '24',
-    'sports': '30',
-    'hentai': '12',
-    'isekai': '62',
-    'mystery': '7',
-    'supernatural': '37',
-    'thriller': '41',
-    'slice-of-life': '36',
-};
-
 const Home = ({ filter }: HomeProps) => {    
-    const { genre } = useParams<{ genre: string }>();
+    const { genreId } = useParams<{ genreId: string }>();
+    const [searchParams] = useSearchParams();
+    const genreName = searchParams.get('name');
+    
     const [anime, setAnime] = useState<Anime[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -55,13 +35,13 @@ const Home = ({ filter }: HomeProps) => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    const nextPage = async () => {
+    const nextPage = () => {
         if (hasNextPage) {
             setPage(prevPage => prevPage + 1);
         }
     };
 
-    const prevPage = async () => {
+    const prevPage = () => {
         if (page > 1) {
             setPage(prevPage => prevPage - 1);
             setHasNextPage(true);
@@ -91,18 +71,14 @@ const Home = ({ filter }: HomeProps) => {
                         url += `/top/anime?filter=airing&page=${page}`;
                         break;
                 }
-            } else if (genre) {
-                // Convert genre name to ID and use it in the API call
-                const genreId = genreIdMap[genre.toLowerCase()];
-                if (genreId) {
-                    url += `/anime?genres=${genreId}&page=${page}`;
-                } else {
-                    setError('Invalid genre');
-                    return;
-                }
+            } else if (genreId) {
+                // Changed from genre to genreId
+                url += `/anime?genres=${genreId}&page=${page}`;
             } else {
                 url += '/top/anime';
             } 
+            
+            console.log("Fetching URL:", url);
             const response = await axios.get(url);
             const mappedAnime = response.data.data.map((item: any) => ({
                 id: item.mal_id,
@@ -113,8 +89,6 @@ const Home = ({ filter }: HomeProps) => {
                 episodes: item.episodes,
                 rating: item.score
             }));
-            console.log(response.data);
-            
             
             setAnime(mappedAnime);
             setHasNextPage(response.data.pagination.has_next_page);
@@ -131,16 +105,14 @@ const Home = ({ filter }: HomeProps) => {
     };
 
     useEffect(() => {
-        
-        const pageTitle = filter 
-            ? `Mugiwara Hub | ${filter.charAt(0).toUpperCase() + filter.slice(1)} Anime`
-            : genre 
-                ? `Mugiwara Hub | ${genre.charAt(0).toUpperCase() + genre.slice(1)} Anime`
-                : 'Mugiwara Hub | Home';
-                
-        document.title = pageTitle;
         fetchAnime();
-    }, [filter, genre, page]); // Dependencies will trigger re-fetch when changed
+    }, [filter, genreId, page]); 
+
+    useEffect(() => {
+        if (filter) {
+            setPage(1); // Reset page to 1 when genreId changes
+        }
+    }, [filter]);
 
     if (isLoading) {
         return (
@@ -167,38 +139,49 @@ const Home = ({ filter }: HomeProps) => {
     }
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 p-6">
-            {anime.map((anime: Anime) => (
-                <AnimeCard key={anime.id} anime={anime} />
-            ))}
-
-            {showPage && (
-                <div className="col-span-full flex justify-center items-center mt-4 gap-4">
-                    <button 
-                        onClick={prevPage} 
-                        disabled={!hasPrevPage}
-                        className={`p-2 rounded-lg transition-all duration-300 ${
-                            hasPrevPage 
-                                ? 'bg-[var(--bg-secondary)] hover:bg-purple-500/20 text-gray-400 hover:text-purple-400' 
-                                : 'bg-[var(--bg-secondary)]/50 text-gray-600 cursor-not-allowed'
-                        }`}
-                    > 
-                        <FaLessThan/>
-                    </button>
-                    <span className="text-gray-400">{page}</span>
-                    <button 
-                        onClick={nextPage}
-                        disabled={!hasNextPage}
-                        className={`p-2 rounded-lg transition-all duration-300 ${
-                            hasNextPage 
-                                ? 'bg-[var(--bg-secondary)] hover:bg-purple-500/20 text-gray-400 hover:text-purple-400' 
-                                : 'bg-[var(--bg-secondary)]/50 text-gray-600 cursor-not-allowed'
-                        }`}
-                    > 
-                        <FaGreaterThan/>
-                    </button>
+        <div>
+            {(filter || genreId) && (
+                <div className="text-left p-4">
+                    <h2 className="text-2xl font-semibold text-white">
+                        {filter ? `Showing ${filter} Anime` : 
+                         genreName ? `Showing ${genreName} Anime` : 
+                         `Showing Genre #${genreId} Anime`}
+                    </h2>
                 </div>
             )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 p-6">
+                {anime.map((anime: Anime) => (
+                    <AnimeCard key={anime.id} anime={anime} />
+                ))}
+
+                {showPage && (
+                    <div className="col-span-full flex justify-center items-center mt-4 gap-4">
+                        <button 
+                            onClick={prevPage} 
+                            disabled={!hasPrevPage}
+                            className={`p-2 rounded-lg transition-all duration-300 ${
+                                hasPrevPage 
+                                    ? 'bg-[var(--bg-secondary)] hover:bg-purple-500/20 text-gray-400 hover:text-purple-400' 
+                                    : 'bg-[var(--bg-secondary)]/50 text-gray-600 cursor-not-allowed'
+                            }`}
+                        > 
+                            <FaLessThan/>
+                        </button>
+                        <span className="text-gray-400">{page}</span>
+                        <button 
+                            onClick={nextPage}
+                            disabled={!hasNextPage}
+                            className={`p-2 rounded-lg transition-all duration-300 ${
+                                hasNextPage 
+                                    ? 'bg-[var(--bg-secondary)] hover:bg-purple-500/20 text-gray-400 hover:text-purple-400' 
+                                    : 'bg-[var(--bg-secondary)]/50 text-gray-600 cursor-not-allowed'
+                            }`}
+                        > 
+                            <FaGreaterThan/>
+                        </button>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { FaUserPlus, FaCheck, FaClock, FaFilm } from 'react-icons/fa';
+import { FaUserPlus, FaCheck, FaClock, FaFilm, FaBan } from 'react-icons/fa';
 import AnimeCard1 from '../components/AnimeCard1';
 
 interface UserProfile {
@@ -10,7 +10,7 @@ interface UserProfile {
     email: string;
     profile?: string;
     createdAt: string;
-    friendStatus?: 'none' | 'pending' | 'accepted';
+    friendStatus?: 'none' | 'pending' | 'accepted' | 'rejected';
 }
 
 interface WatchlistItem {
@@ -25,7 +25,7 @@ const VisitPage = () => {
     const { userId } = useParams();
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
-    const [friendRequestStatus, setFriendRequestStatus] = useState<'none' | 'pending' | 'accepted'>('none');
+    const [friendRequestStatus, setFriendRequestStatus] = useState<'none' | 'pending' | 'accepted' | 'rejected'>('none');
     const token = localStorage.getItem('token');
 
     const fetchProfile = async () => {
@@ -89,7 +89,7 @@ const VisitPage = () => {
                         {/* Profile Image - Centered on mobile */}
                         <div className="flex justify-center sm:justify-start">
                             <img
-                                src={profile.profile ? `http://localhost:3000/assets/${profile.profile}` : '/default-avatar.png'}
+                                src={profile.profile ? `${profile.profile}` : '/default-avatar.png'}
                                 alt={profile.name}
                                 className="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-purple-500/50 object-cover"
                             />
@@ -114,7 +114,10 @@ const VisitPage = () => {
                                     ? 'bg-purple-500 hover:bg-purple-600 text-white' 
                                     : friendRequestStatus === 'pending'
                                     ? 'bg-yellow-500/20 text-yellow-400 cursor-not-allowed'
-                                    : 'bg-green-500/20 text-green-400 cursor-not-allowed'}`}
+                                    : friendRequestStatus === 'rejected'
+                                    ? 'bg-red-500/20 text-red-400 cursor-not-allowed'
+                                    : 'bg-green-500/20 text-green-400 cursor-not-allowed'
+                                }`}
                         >
                             {friendRequestStatus === 'none' && (
                                 <>
@@ -132,6 +135,12 @@ const VisitPage = () => {
                                 <>
                                     <FaCheck />
                                     <span>Friends</span>
+                                </>
+                            )}
+                            {friendRequestStatus === 'rejected' && (
+                                <>
+                                    <FaBan />
+                                    <span>Request Rejected</span>
                                 </>
                             )}
                         </button>

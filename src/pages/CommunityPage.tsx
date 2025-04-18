@@ -1,48 +1,21 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { FaSearch } from 'react-icons/fa';
-import UserCard from '../components/usersCard';
-
-interface User {
-    id: number;
-    name: string;
-    email: string;
-    profile?: string;
-    createdAt: string;
-}
+import { FaUsers, FaComments, FaPlus } from 'react-icons/fa';
+import CommunitiesTab from '../components/communities';
+import MessagesTab from '../components/message';
+import CreateCommunityModal from '../components/createCommunityModal';
 
 const CommunityPage = () => {
-    const [users, setUsers] = useState<User[]>([]);
-    const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const token = localStorage.getItem('token');
+    const [activeTab, setActiveTab] = useState<'communities' | 'messages'>('communities');
+    const [showCreateCommunity, setShowCreateCommunity] = useState(false);
 
-    const fetchUsers = async () => {
-        try {
-            const response = await axios.get('http://localhost:3000/api/users', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            setUsers(response.data);
-            console.log(response.data);
-        } catch (error) {
-            console.error('Error fetching users:', error);
-            setError('Failed to load users');
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     useEffect(() => {
-        fetchUsers();
+        // Initial setup
+        setTimeout(() => {
+            setIsLoading(false);
+        }, 500);
     }, []);
-
-    // Filter users based on search term
-    const filteredUsers = users.filter(user => 
-        user.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
 
     if (isLoading) {
         return (
@@ -52,61 +25,116 @@ const CommunityPage = () => {
         );
     }
 
-    if (error) {
-        return (
-            <div className="min-h-screen bg-[var(--bg-primary)] pt-20 flex items-center justify-center">
-                <div className="text-center">
-                    <p className="text-red-500 mb-4">{error}</p>
-                    <button 
-                        onClick={fetchUsers}
-                        className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
-                    >
-                        Try Again
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] pt-20 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-2xl mx-auto"> {/* Reduced from max-w-3xl */}
-                <h1 className="text-3xl font-bold text-white mb-8">Community Members</h1>
-                
-                {/* Search Bar */}
+            <div className="max-w-4xl mx-auto">
+                {/* Tabs and Mobile Menu */}
                 <div className="mb-8">
-                    <div className="relative">
-                        <input
-                            type="text"
-                            placeholder="Search members..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-[var(--bg-secondary)] text-white px-4 py-3 pl-12 
-                                     rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-                        />
-                        <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                    {/* Desktop View */}
+                    <div className="hidden md:flex md:items-center md:justify-between">
+                        <div className="flex gap-4">
+                            <button
+                                onClick={() => setActiveTab('communities')}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors
+                                    ${activeTab === 'communities' 
+                                        ? 'bg-purple-500 text-white' 
+                                        : 'text-gray-400 hover:text-white'}`}
+                            >
+                                <FaUsers />
+                                <span>Communities</span>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('messages')}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors
+                                    ${activeTab === 'messages' 
+                                        ? 'bg-purple-500 text-white' 
+                                        : 'text-gray-400 hover:text-white'}`}
+                            >
+                                <FaComments />
+                                <span>Messages</span>
+                            </button>
+                        </div>
+                        
+                        {activeTab === 'communities' && (
+                            <button
+                                onClick={() => setShowCreateCommunity(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-purple-500 
+                                         text-white rounded-lg hover:bg-purple-600 transition-colors"
+                            >
+                                <FaPlus />
+                                <span>Create Community</span>
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Mobile View */}
+                    <div className="flex md:hidden flex-col">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex space-x-2">
+                                <button
+                                    onClick={() => setActiveTab('communities')}
+                                    className={`flex items-center justify-center w-12 h-10 rounded-lg transition-colors
+                                        ${activeTab === 'communities' 
+                                            ? 'bg-purple-500 text-white' 
+                                            : 'bg-gray-800/50 text-gray-400'}`}
+                                >
+                                    <FaUsers />
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('messages')}
+                                    className={`flex items-center justify-center w-12 h-10 rounded-lg transition-colors
+                                        ${activeTab === 'messages' 
+                                            ? 'bg-purple-500 text-white' 
+                                            : 'bg-gray-800/50 text-gray-400'}`}
+                                >
+                                    <FaComments />
+                                </button>
+                            </div>
+                            
+                            {activeTab === 'communities' && (
+                                <div className="flex flex-col gap-2">
+                                    <p className="text-gray-400 text-sm">
+                                    {activeTab === 'communities' 
+                                        ? 'Join and create communities around your favorite anime.' 
+                                        : 'Chat with your Friends.'}
+                                    </p>
+                                    <button
+                                        onClick={() => setShowCreateCommunity(true)}
+                                        className="flex items-center gap-1 px-3 py-2 bg-purple-500 
+                                                 text-white text-sm rounded-lg hover:bg-purple-600 
+                                                 transition-colors"
+                                    >
+                                        <FaPlus className="text-xs" />
+                                        <span>Create</span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                        
+                        <div className="bg-[var(--bg-secondary)]/60 rounded-lg p-3 mb-4">
+                            <h2 className="text-white font-medium">
+                                {activeTab === 'communities' ? 'Anime Communities' : 'Community Messages'}
+                            </h2>
+                            <p className="text-gray-400 text-sm">
+                                {activeTab === 'communities' 
+                                    ? 'Join and create communities around your favorite anime.' 
+                                    : 'Chat with your Friends.'}
+                            </p>
+                        </div>
                     </div>
                 </div>
 
-                {/* User List */}
-                <div className="space-y-4">
-                    {filteredUsers.map((user) => (
-                        <UserCard
-                            key={user.id}
-                            id={user.id}
-                            name={user.name}
-                            profile={user.profile}
-                            createdAt={user.createdAt}
-                        />
-                    ))}
-
-                    {filteredUsers.length === 0 && (
-                        <div className="text-center text-gray-400 py-8">
-                            No members found matching "{searchTerm}"
-                        </div>
-                    )}
-                </div>
+                {/* Active Tab Content */}
+                {activeTab === 'communities' && <CommunitiesTab />}
+                {activeTab === 'messages' && <MessagesTab />}
             </div>
+
+            {/* Create Community Modal */}
+            {showCreateCommunity && (
+                <CreateCommunityModal 
+                    onClose={() => setShowCreateCommunity(false)}
+                />
+            )}
         </div>
     );
 };

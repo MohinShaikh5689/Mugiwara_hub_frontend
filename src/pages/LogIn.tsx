@@ -32,9 +32,12 @@ const Login = () => {
             const token = response.data.user.token;
             const isLoggedIn = response.data.user.isLoggedIn;
             const profile = response.data.user.profile;
-            localStorage.setItem('profile', JSON.stringify(profile));
+            const userId = response.data.user.Id;
+            localStorage.setItem('userId', userId);
+            localStorage.setItem('profile', profile);
             localStorage.setItem('isLoggedIn', isLoggedIn);
             localStorage.setItem('token', token);
+
             navigate('/');
             
         } catch (error) {

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { FaBookmark, FaCheck } from 'react-icons/fa';
+import CommentComponent from "../components/commentComponent";
 
 
 interface AnimeDetails {
@@ -272,6 +273,11 @@ const AnimeDetailPage = () => {
                         </div>
                     </div>
                 </div>
+            </div>
+            
+            {/* Comments Section */}    
+            <div className="mb-12"> {/* Added margin-bottom */}
+                <CommentComponent animeId={Number(id)} />
             </div>
         </div>
     );

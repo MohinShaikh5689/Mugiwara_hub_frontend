@@ -36,8 +36,6 @@ const SignUpPage = () => {
             );
             const token = response.data.user.token;
             const isLoggedIn = response.data.user.isLoggedIn;
-            const profile = response.data.user.profile;
-            localStorage.setItem('profile', JSON.stringify(profile));
             localStorage.setItem('isLoggedIn', isLoggedIn);
             localStorage.setItem('token', token);
             navigate('/');

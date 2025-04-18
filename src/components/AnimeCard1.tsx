@@ -17,7 +17,11 @@ const AnimeCard1 = ({ id, english_title, japanese_title, image_url, synopsis }: 
             whileHover={{ y: -5 }}
             transition={{ duration: 0.2 }}
         >
-            <Link to={`/anime/${id}`}>
+            <Link 
+                to={`/anime/${id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+            >
                 <div className="relative group">
                     {/* Image Container - Reduced height */}
                     <div className="h-[250px] sm:h-[300px] overflow-hidden"> 

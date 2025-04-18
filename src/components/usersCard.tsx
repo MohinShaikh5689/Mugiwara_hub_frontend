@@ -21,7 +21,7 @@ const UserCard = ({ id, name, profile, createdAt }: UserCardProps) => {
                               bg-purple-500/20 flex-shrink-0">
                     {profile ? (
                         <img 
-                            src={`http://localhost:3000/assets/${profile}`}
+                            src={`${profile}`}
                             alt={name}
                             className="w-full h-full object-cover"
                         />

@@ -1,20 +1,21 @@
 import { useEffect, useState } from 'react';
-import { useSearch } from '../context/searchContext';
+
 import AnimeCard from '../components/AnimeCard';
 import { motion } from 'framer-motion';
 import axios from 'axios';
+import { useParams } from 'react-router-dom';
 
 const SearchResults = () => {
-    const { searchQuery } = useSearch();
-    const [result, setResult] = useState<any[]>([]);
 
+    const [result, setResult] = useState<any[]>([]);
+    const { query } = useParams<{ query: string }>();
 
     const fetchSearchResults = async () => {
       
         setResult([]); // Reset results before new search
         
         try {
-            const response = await axios.get(`https://api.jikan.moe/v4/anime?q=${searchQuery}`);
+            const response = await axios.get(`https://api.jikan.moe/v4/anime?q=${query}`);
             const mappedResults = response.data.data.map((item: any) => ({
                 id: item.mal_id,
                 english_title: item.title,
@@ -32,7 +33,8 @@ const SearchResults = () => {
 
     useEffect(() => {
         fetchSearchResults();
-    }, [searchQuery]); // Only depend on searchQuery
+        console.log(query);
+    }, [query]); // Only depend on searchQuery
 
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] pt-20 px-4 sm:px-6 lg:px-8">
@@ -54,7 +56,7 @@ const SearchResults = () => {
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.2 }}
                     >
-                        Found {result.length} results for "{searchQuery}"
+                        Found {result.length} results for "{query}"
                     </motion.p>
                 </div>
 

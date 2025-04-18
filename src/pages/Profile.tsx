@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaEdit, FaFilm, FaUserFriends } from 'react-icons/fa';
+import { FaEdit, FaFilm, FaUserFriends, FaTrash, FaSpinner } from 'react-icons/fa';
 import AnimeCard1 from '../components/AnimeCard1';
 
 interface UserProfile {
@@ -26,6 +26,8 @@ const Profile = () => {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [deletingId, setDeletingId] = useState<number | null>(null);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     const token = localStorage.getItem('token');
 
@@ -41,7 +43,6 @@ const Profile = () => {
             console.log(token);
         } catch (error) {
             console.error('Error fetching profile:', error);
-            
         }
     };
 
@@ -56,9 +57,35 @@ const Profile = () => {
             setWatchlist(response.data);
         } catch (error) {
             console.error('Error fetching watchlist:', error);
-           
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const deleteFromWatchlist = async (id: number) => {
+        setDeletingId(id);
+        setDeleteError(null);
+        
+        try {
+            await axios.delete('http://localhost:3000/api/watchlist/delete', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                data: {
+                    AnimeId: id
+                }
+            });
+            
+            // Remove the item from the state
+            setWatchlist(current => current.filter(item => item.id !== id));
+        } catch (error) {
+            console.error('Error removing from watchlist:', error);
+            setDeleteError('Failed to remove from watchlist. Please try again.');
+            
+            // Clear error after 3 seconds
+            setTimeout(() => setDeleteError(null), 3000);
+        } finally {
+            setDeletingId(null);
         }
     };
 
@@ -69,7 +96,7 @@ const Profile = () => {
         }
         fetchProfile();
         fetchWatchlist();
-    }, [token, navigate]);
+    }, [token, navigate, deletingId]);
 
     if (isLoading) {
         return (
@@ -88,7 +115,7 @@ const Profile = () => {
                         {/* Profile Image */}
                         <div className="flex justify-center sm:justify-start">
                             <img
-                                src={`http://localhost:3000/assets/${profile?.profile}` || '/default-avatar.png'}
+                                src={`${profile?.profile}` || '/default-avatar.png'}
                                 alt={profile?.name}
                                 className="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-purple-500/50 object-cover"
                             />
@@ -119,7 +146,7 @@ const Profile = () => {
                             </button>
 
                             <button
-                                onClick={() => navigate('/settings')}
+                                onClick={() => navigate('settings')}
                                 className="w-full sm:w-auto px-6 py-3 bg-purple-500/20 text-purple-400 rounded-lg 
                                      hover:bg-purple-500/30 transition-colors duration-300 flex items-center 
                                      justify-center gap-2"
@@ -138,17 +165,41 @@ const Profile = () => {
                     <h2 className="text-2xl sm:text-3xl font-bold text-white">My Watchlist</h2>
                 </div>
 
+                {deleteError && (
+                    <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-300">
+                        {deleteError}
+                    </div>
+                )}
+
                 {watchlist.length > 0 ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                         {watchlist.map((item) => (
-                            <AnimeCard1
-                                key={item.id}
-                                id={item.AnimeId}
-                                english_title={item.English_Title}
-                                japanese_title={item.Japanese_Title}
-                                image_url={item.Image_url}
-                                synopsis={item.synopsis}
-                            />
+                            <div key={item.id} className="relative group">
+                                <AnimeCard1
+                                    id={item.AnimeId}
+                                    english_title={item.English_Title}
+                                    japanese_title={item.Japanese_Title}
+                                    image_url={item.Image_url}
+                                    synopsis={item.synopsis}
+                                />
+                                
+                                {/* Delete Button */}
+                                <button
+                                    onClick={() => deleteFromWatchlist(item.AnimeId)}
+                                    disabled={deletingId === item.AnimeId}
+                                    className="absolute top-2 right-2 p-2 bg-red-500/80 text-white rounded-full 
+                                             opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                                             hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50
+                                             disabled:bg-gray-500 disabled:cursor-not-allowed z-10"
+                                    aria-label="Remove from watchlist"
+                                >
+                                    {deletingId === item.id ? (
+                                        <FaSpinner className="animate-spin w-4 h-4" />
+                                    ) : (
+                                        <FaTrash className="w-4 h-4" />
+                                    )}
+                                </button>
+                            </div>
                         ))}
                     </div>
                 ) : (

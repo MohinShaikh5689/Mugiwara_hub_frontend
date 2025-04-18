@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useSearch } from '../context/searchContext';
-import { FaUserCircle, FaCog, FaSignOutAlt } from 'react-icons/fa';
+import { FaUserCircle, FaCog, FaSignOutAlt, FaSearch, FaBell } from 'react-icons/fa';
 
 const menuItems = [
     {
@@ -14,27 +13,7 @@ const menuItems = [
             { path: '/anime/airing', label: 'Currently Airing' }
         ]
     },
-    {
-        path: '/genres',
-        label: 'Genres',
-        submenu: [
-            { path: '/genres/action', label: 'Action' },
-            { path: '/genres/adventure', label: 'Adventure' },
-            { path: '/genres/comedy', label: 'Comedy' },
-            { path: '/genres/drama', label: 'Drama' },
-            { path: '/genres/fantasy', label: 'Fantasy' },
-            { path: '/genres/horror', label: 'Horror' },
-            { path: '/genres/romance', label: 'Romance' },
-            { path: '/genres/sci-fi', label: 'Sci-Fi' },
-            { path: '/genres/sports', label: 'Sports' },
-            { path: '/genres/hentai', label: 'Hentai' },
-            { path: '/genres/isekai', label: 'Isekai' },
-            { path: '/genres/mystery', label: 'Mystery' },
-            { path: '/genres/supernatural', label: 'Supernatural' },
-            { path: '/genres/thriller', label: 'Thriller' },
-            { path: '/genres/slice-of-life', label: 'Slice of Life' },
-        ]
-    },
+    {path: '/genres',label: 'Genres'},
     { path: '/community', label: 'Community' }
 ];
 
@@ -44,10 +23,7 @@ const Navbar = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
-    const { setQuery } = useSearch();
     const profile = localStorage.getItem('profile');
-    const parsedProfile = profile ? JSON.parse(profile) : 'https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg';
-    const displayProfile = `http://localhost:3000/assets/${parsedProfile}` || undefined;
 
     const token = localStorage.getItem('token');
 
@@ -56,8 +32,7 @@ const Navbar = () => {
     const location = useLocation();
 
     const fetchSearchResults = async () => {
-            setQuery(searchQuery);
-            navigate('/search');
+            navigate('/search/' + searchQuery);
     };
 
     const handleLogout = () => {
@@ -65,9 +40,15 @@ const Navbar = () => {
         localStorage.removeItem('profile');
         navigate('/login');
     };
+    
+    const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && searchQuery.trim()) {
+            fetchSearchResults();
+        }
+    };
 
     useEffect(() => {
-        console.log(displayProfile);
+        console.log(profile);
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 20);
         };
@@ -100,29 +81,32 @@ const Navbar = () => {
                     </div>
 
                     {/* Search Bar */}
-                    <div className="hidden md:block flex-1 max-w-md mx-4">
-                        <div className="relative group">
+                    <div className="hidden md:flex flex-1 max-w-md mx-4 items-center">
+                        <div className="relative flex-grow mr-2">
                             <input
                                 type="search"
                                 placeholder="Search anime..."
                                 className="w-full px-4 py-2 bg-[var(--bg-primary)]/50 text-[var(--text-primary)] rounded-lg 
                                          border border-gray-700/50 focus:outline-none focus:border-[var(--accent)]
                                          transition-all duration-300 placeholder-gray-500
-                                         group-hover:border-[var(--accent)]/50 focus:ring-2 focus:ring-[var(--accent)]/20"
+                                         hover:border-[var(--accent)]/50 focus:ring-2 focus:ring-[var(--accent)]/20"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyDown={handleSearchKeyDown}
                             />
-                            <button onClick={fetchSearchResults} className="absolute right-3 top-2.5 transition-all duration-300 
-                                             hover:text-[var(--accent)] hover:scale-110">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                            </button>
                         </div>
+                        <button 
+                            onClick={fetchSearchResults} 
+                            disabled={!searchQuery.trim()}
+                            className="px-4 py-2 rounded-lg bg-purple-500 hover:bg-purple-600 
+                                     text-white flex items-center justify-center
+                                     transition-all duration-300 disabled:opacity-50 
+                                     disabled:cursor-not-allowed disabled:hover:bg-purple-500"
+                        >
+                            <FaSearch className="text-sm" />
+                        </button>
                     </div>
 
-                    {/* Navigation Links */}
                     {/* Navigation Links */}
                     <div className="hidden md:flex items-center space-x-1">
                         {menuItems.map((item) => (
@@ -161,57 +145,78 @@ const Navbar = () => {
                         ))}
                     </div>
 
-                    <div className="hidden md:flex items-center ml-4">
+                    <div className="hidden md:flex items-center ml-4 space-x-3">
                         {token ? (
-                            <div className="relative">
-                                {/* Existing profile button and dropdown */}
-                                <button
-                                    onClick={() => setIsProfileOpen(!isProfileOpen)}
-                                    className="flex items-center space-x-2 focus:outline-none"
+                            <>
+                                {/* Notification Bell */}
+                                <Link 
+                                    to="/notifications" 
+                                    className={`p-2 rounded-full transition-all duration-300 
+                                             hover:bg-purple-500/20 relative
+                                             ${isActive('/notifications') ? 'text-purple-400' : 'text-gray-400 hover:text-purple-400'}`}
+                                    aria-label="Notifications"
                                 >
-                                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-purple-500/50 
-                                                hover:border-purple-500 transition-colors duration-300">
-                                            <img
-                                                src={displayProfile}
-                                                alt="Profile"
-                                                className="w-full h-full object-cover"
-                                            />
-                                    </div>
-                                </button>
+                                    <FaBell className="text-lg" />
+                                </Link>
 
-                                {/* Profile Dropdown */}
-                                {isProfileOpen && (
-                                    <div className="absolute right-0 mt-2 w-48 bg-[var(--bg-secondary)] rounded-lg shadow-lg 
-                                                border border-gray-800/50 overflow-hidden z-50">
-                                        <div className="py-1">
-                                            <Link
-                                                to="/profile"
-                                                className="flex items-center px-4 py-2 text-sm text-gray-400 hover:text-purple-400 
-                                                    hover:bg-purple-500/10 transition-colors duration-200"
-                                            >
-                                                <FaUserCircle className="w-4 h-4 mr-2" />
-                                                Profile
-                                            </Link>
-                                            <Link
-                                                to="/settings"
-                                                className="flex items-center px-4 py-2 text-sm text-gray-400 hover:text-purple-400 
-                                                    hover:bg-purple-500/10 transition-colors duration-200"
-                                            >
-                                                <FaCog className="w-4 h-4 mr-2" />
-                                                Settings
-                                            </Link>
-                                            <button
-                                                onClick={handleLogout}
-                                                className="w-full flex items-center px-4 py-2 text-sm text-red-400 hover:text-red-300 
-                                                    hover:bg-red-500/10 transition-colors duration-200"
-                                            >
-                                                <FaSignOutAlt className="w-4 h-4 mr-2" />
-                                                Logout
-                                            </button>
+                                {/* Profile Menu */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setIsProfileOpen(!isProfileOpen)}
+                                        className="flex items-center space-x-2 focus:outline-none"
+                                    >
+                                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-purple-500/50 
+                                                    hover:border-purple-500 transition-colors duration-300">
+                                                <img
+                                                    src={`${profile}`}
+                                                    alt="Profile"
+                                                    className="w-full h-full object-cover"
+                                                />
                                         </div>
-                                    </div>
-                                )}
-                            </div>
+                                    </button>
+
+                                    {/* Profile Dropdown */}
+                                    {isProfileOpen && (
+                                        <div className="absolute right-0 mt-2 w-48 bg-[var(--bg-secondary)] rounded-lg shadow-lg 
+                                                    border border-gray-800/50 overflow-hidden z-50">
+                                            <div className="py-1">
+                                                <Link
+                                                    to="/profile"
+                                                    className="flex items-center px-4 py-2 text-sm text-gray-400 hover:text-purple-400 
+                                                        hover:bg-purple-500/10 transition-colors duration-200"
+                                                >
+                                                    <FaUserCircle className="w-4 h-4 mr-2" />
+                                                    Profile
+                                                </Link>
+                                                <Link
+                                                    to="/notifications"
+                                                    className="flex items-center px-4 py-2 text-sm text-gray-400 hover:text-purple-400 
+                                                        hover:bg-purple-500/10 transition-colors duration-200"
+                                                >
+                                                    <FaBell className="w-4 h-4 mr-2" />
+                                                    Notifications
+                                                </Link>
+                                                <Link
+                                                    to="profile/settings"
+                                                    className="flex items-center px-4 py-2 text-sm text-gray-400 hover:text-purple-400 
+                                                        hover:bg-purple-500/10 transition-colors duration-200"
+                                                >
+                                                    <FaCog className="w-4 h-4 mr-2" />
+                                                    Settings
+                                                </Link>
+                                                <button
+                                                    onClick={handleLogout}
+                                                    className="w-full flex items-center px-4 py-2 text-sm text-red-400 hover:text-red-300 
+                                                        hover:bg-red-500/10 transition-colors duration-200"
+                                                >
+                                                    <FaSignOutAlt className="w-4 h-4 mr-2" />
+                                                    Logout
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </>
                         ) : (
                             <div className="flex items-center space-x-4">
                                 <Link
@@ -254,15 +259,29 @@ const Navbar = () => {
                 <div className={`md:hidden overflow-hidden transition-all duration-300 ${isMenuOpen ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
                     }`}>
                     <div className="px-2 pt-2 pb-3 space-y-1">
-                        <input
-                            type="search"
-                            placeholder="Search anime..."
-                            className="w-full px-4 py-2 mb-3 bg-[var(--bg-primary)]/50 text-[var(--text-primary)]
+                        {/* Mobile Search */}
+                        <div className="flex space-x-2 mb-3">
+                            <input
+                                type="search"
+                                placeholder="Search anime..."
+                                className="flex-grow px-4 py-2 bg-[var(--bg-primary)]/50 text-[var(--text-primary)]
                                      rounded-lg border border-gray-700/50 focus:outline-none focus:border-[var(--accent)]
                                      transition-all duration-300"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyDown={handleSearchKeyDown}
+                            />
+                            <button 
+                                onClick={fetchSearchResults}
+                                disabled={!searchQuery.trim()}
+                                className="px-3 py-2 bg-purple-500 text-white rounded-lg
+                                         disabled:opacity-50 disabled:bg-purple-500"
+                            >
+                                <FaSearch />
+                            </button>
+                        </div>
+                        
+                        {/* Mobile Navigation Items */}
                         {menuItems.map((item) => (
                             <div key={item.path} className="space-y-1">
                                 <button
@@ -303,8 +322,25 @@ const Navbar = () => {
                                 )}
                             </div>
                         ))}
+
+                        {/* Mobile Notifications Link (only for logged in users) */}
+                        {token && (
+                            <Link
+                                to="/notifications"
+                                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300
+                                      ${isActive('/notifications')
+                                        ? 'text-[var(--accent)] bg-[var(--accent)]/10'
+                                        : 'text-[var(--text-primary)] hover:text-[var(--accent)] hover:bg-[var(--accent)]/5'
+                                    }`}
+                            >
+                                <FaBell />
+                                <span>Notifications</span>
+                            </Link>
+                        )}
                     </div>
-                    {!token && (
+
+                    {/* Mobile Login/Signup or Profile Options */}
+                    {!token ? (
                         <div className="px-2 pt-4 pb-3 space-y-2 border-t border-gray-800/50">
                             <Link
                                 to="/login"
@@ -321,6 +357,33 @@ const Navbar = () => {
                             >
                                 Sign Up
                             </Link>
+                        </div>
+                    ) : (
+                        <div className="px-2 pt-4 pb-3 space-y-2 border-t border-gray-800/50">
+                            <Link
+                                to="/profile"
+                                className="flex items-center gap-2 px-3 py-2 text-gray-300 
+                                         hover:text-purple-400 rounded-lg transition-colors duration-300"
+                            >
+                                <FaUserCircle />
+                                <span>Profile</span>
+                            </Link>
+                            <Link
+                                to="/settings"
+                                className="flex items-center gap-2 px-3 py-2 text-gray-300 
+                                         hover:text-purple-400 rounded-lg transition-colors duration-300"
+                            >
+                                <FaCog />
+                                <span>Settings</span>
+                            </Link>
+                            <button
+                                onClick={handleLogout}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-red-400 
+                                         hover:text-red-300 rounded-lg transition-colors duration-300"
+                            >
+                                <FaSignOutAlt />
+                                <span>Logout</span>
+                            </button>
                         </div>
                     )}
                 </div>
